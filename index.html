@@ -8,49 +8,64 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="回家記錄">
   <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; padding: 16px; background-color: #f4f4f9; margin: 0; }
-    h2 { text-align: center; color: #333; margin-top: 10px; }
-    .btn-main { width: 100%; padding: 18px; font-size: 22px; font-weight: bold; color: #fff; background-color: #007aff; border: none; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); cursor: pointer; }
-    .btn-main:active { background-color: #0056b3; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; padding: 20px; background-color: #f4f4f9; margin: 0; box-sizing: border-box; }
+    .container { max-width: 400px; margin: 0 auto; text-align: center; }
+    h2 { color: #333; margin-top: 20px; margin-bottom: 30px; font-size: 24px; }
     
+    /* 主按鈕樣式 */
+    .menu-btn { width: 100%; padding: 20px; font-size: 20px; font-weight: bold; border: none; border-radius: 14px; margin-bottom: 16px; cursor: pointer; transition: transform 0.1s; box-shadow: 0 4px 10px rgba(0,0,0,0.08); }
+    .menu-btn:active { transform: scale(0.98); }
+    .btn-home { background-color: #34c759; color: #fff; }
+    .btn-history { background-color: #007aff; color: #fff; }
+
     /* 彈出視窗 Style */
-    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; }
-    .modal-content { background: #fff; padding: 20px; border-radius: 12px; width: 85%; max-width: 320px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
-    .modal-content input, .modal-content textarea { width: 100%; padding: 10px; margin: 8px 0; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 16px; }
-    .modal-btns { display: flex; justify-content: space-between; margin-top: 12px; }
-    .modal-btns button { width: 48%; padding: 10px; border: none; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; }
+    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 100; }
+    .modal-content { background: #fff; padding: 24px; border-radius: 16px; width: 85%; max-width: 320px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); text-align: left; }
+    .modal-content h3 { margin-top: 0; text-align: center; color: #333; }
+    .modal-content label { font-size: 14px; color: #666; font-weight: bold; display: block; margin-top: 10px; }
+    .modal-content input { width: 100%; padding: 12px; margin-top: 6px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 16px; background-color: #f9f9f9; }
+    .modal-btns { display: flex; justify-content: space-between; margin-top: 20px; }
+    .modal-btns button { width: 48%; padding: 12px; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; }
     .btn-save { background-color: #34c759; color: #fff; }
     .btn-cancel { background-color: #8e8e93; color: #fff; }
 
-    /* 表格 Style */
-    table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-    th, td { border: 1px solid #ddd; padding: 10px; text-align: center; font-size: 15px; }
-    th { background-color: #e5e5ea; color: #333; }
-    .action-btn { border: none; padding: 5px 8px; border-radius: 4px; font-size: 12px; margin: 2px; cursor: pointer; color: white; }
+    /* 歷史紀錄區域 (預設隱藏) */
+    #historySection { display: none; margin-top: 20px; text-align: left; }
+    table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+    th, td { border: 1px solid #eee; padding: 10px; text-align: center; font-size: 14px; }
+    th { background-color: #f2f2f7; color: #333; }
+    .action-btn { border: none; padding: 6px 10px; border-radius: 6px; font-size: 12px; margin: 2px; cursor: pointer; color: white; font-weight: bold; }
     .btn-edit { background-color: #ff9500; }
     .btn-delete { background-color: #ff3b30; }
   </style>
 </head>
 <body>
 
-  <h2>回家時間記錄表</h2>
-  <button class="btn-main" onclick="openAddModal()">按下「回家」</button>
+  <div class="container">
+    <h2>回家時間記錄</h2>
+    
+    <button class="menu-btn btn-home" onclick="openAddModal()">回家</button>
+    <button class="menu-btn btn-history" onclick="toggleHistory()">查看歷史記錄</button>
 
-  <table>
-    <thead>
-      <tr>
-        <th style="width: 20%;">日期</th>
-        <th style="width: 25%;">到家時間</th>
-        <th>備註</th>
-        <th style="width: 25%;">操作</th>
-      </tr>
-    </thead>
-    <tbody id="recordTable"></tbody>
-  </table>
+    <div id="historySection">
+      <h3>歷史記錄</h3>
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 20%;">日期</th>
+            <th style="width: 25%;">時間</th>
+            <th>備註</th>
+            <th style="width: 30%;">操作</th>
+          </tr>
+        </thead>
+        <tbody id="recordTable"></tbody>
+      </table>
+    </div>
+  </div>
 
   <div class="modal" id="inputModal">
     <div class="modal-content">
-      <h3 id="modalTitle">新增記錄</h3>
+      <h3 id="modalTitle">新增回家記錄</h3>
       <label>日期：</label>
       <input type="text" id="recordDate">
       <label>到家時間：</label>
@@ -85,6 +100,16 @@
         `;
         tbody.appendChild(tr);
       });
+    }
+
+    function toggleHistory() {
+      const historySection = document.getElementById('historySection');
+      if (historySection.style.display === 'block') {
+        historySection.style.display = 'none';
+      } else {
+        renderTable();
+        historySection.style.display = 'block';
+      }
     }
 
     function openAddModal() {
@@ -127,8 +152,12 @@
       }
 
       localStorage.setItem('homeRecords', JSON.stringify(records));
-      renderTable();
       closeModal();
+
+      // 如果歷史記錄開啟中，同步更新畫面
+      if (document.getElementById('historySection').style.display === 'block') {
+        renderTable();
+      }
     }
 
     function deleteRecord(index) {
@@ -138,9 +167,6 @@
         renderTable();
       }
     }
-
-    // 初始化渲染
-    renderTable();
   </script>
 </body>
 </html>
