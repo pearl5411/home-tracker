@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>回家時間記錄</title>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="回家記錄">
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; padding: 16px; background-color: #f4f4f9; margin: 0; }
+    h2 { text-align: center; color: #333; margin-top: 10px; }
+    .btn-main { width: 100%; padding: 18px; font-size: 22px; font-weight: bold; color: #fff; background-color: #007aff; border: none; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); cursor: pointer; }
+    .btn-main:active { background-color: #0056b3; }
+    
+    /* 彈出視窗 Style */
+    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; }
+    .modal-content { background: #fff; padding: 20px; border-radius: 12px; width: 85%; max-width: 320px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+    .modal-content input, .modal-content textarea { width: 100%; padding: 10px; margin: 8px 0; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 16px; }
+    .modal-btns { display: flex; justify-content: space-between; margin-top: 12px; }
+    .modal-btns button { width: 48%; padding: 10px; border: none; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; }
+    .btn-save { background-color: #34c759; color: #fff; }
+    .btn-cancel { background-color: #8e8e93; color: #fff; }
+
+    /* 表格 Style */
+    table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+    th, td { border: 1px solid #ddd; padding: 10px; text-align: center; font-size: 15px; }
+    th { background-color: #e5e5ea; color: #333; }
+    .action-btn { border: none; padding: 5px 8px; border-radius: 4px; font-size: 12px; margin: 2px; cursor: pointer; color: white; }
+    .btn-edit { background-color: #ff9500; }
+    .btn-delete { background-color: #ff3b30; }
+  </style>
+</head>
+<body>
+
+  <h2>回家時間記錄表</h2>
+  <button class="btn-main" onclick="openAddModal()">按下「回家」</button>
+
+  <table>
+    <thead>
+      <tr>
+        <th style="width: 20%;">日期</th>
+        <th style="width: 25%;">到家時間</th>
+        <th>備註</th>
+        <th style="width: 25%;">操作</th>
+      </tr>
+    </thead>
+    <tbody id="recordTable"></tbody>
+  </table>
+
+  <div class="modal" id="inputModal">
+    <div class="modal-content">
+      <h3 id="modalTitle">新增記錄</h3>
+      <label>日期：</label>
+      <input type="text" id="recordDate">
+      <label>到家時間：</label>
+      <input type="text" id="recordTime">
+      <label>備註：</label>
+      <input type="text" id="recordNote" placeholder="例如：走路、下雨坐公車">
+      
+      <div class="modal-btns">
+        <button class="btn-cancel" onclick="closeModal()">取消</button>
+        <button class="btn-save" onclick="saveRecord()">儲存</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let records = JSON.parse(localStorage.getItem('homeRecords')) || [];
+    let editIndex = -1;
+
+    function renderTable() {
+      const tbody = document.getElementById('recordTable');
+      tbody.innerHTML = '';
+      records.forEach((item, index) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${item.date}</td>
+          <td>${item.time}</td>
+          <td style="text-align: left;">${item.note || ''}</td>
+          <td>
+            <button class="action-btn btn-edit" onclick="openEditModal(${index})">修改</button>
+            <button class="action-btn btn-delete" onclick="deleteRecord(${index})">刪除</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function openAddModal() {
+      editIndex = -1;
+      const now = new Date();
+      document.getElementById('modalTitle').innerText = '新增回家記錄';
+      document.getElementById('recordDate').value = `${now.getMonth() + 1}/${now.getDate()}`;
+      document.getElementById('recordTime').value = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+      document.getElementById('recordNote').value = '';
+      document.getElementById('inputModal').style.display = 'flex';
+    }
+
+    function openEditModal(index) {
+      editIndex = index;
+      document.getElementById('modalTitle').innerText = '修改記錄';
+      document.getElementById('recordDate').value = records[index].date;
+      document.getElementById('recordTime').value = records[index].time;
+      document.getElementById('recordNote').value = records[index].note;
+      document.getElementById('inputModal').style.display = 'flex';
+    }
+
+    function closeModal() {
+      document.getElementById('inputModal').style.display = 'none';
+    }
+
+    function saveRecord() {
+      const date = document.getElementById('recordDate').value;
+      const time = document.getElementById('recordTime').value;
+      const note = document.getElementById('recordNote').value;
+
+      if (!date || !time) {
+        alert('請填寫日期與時間');
+        return;
+      }
+
+      if (editIndex === -1) {
+        records.unshift({ date, time, note });
+      } else {
+        records[editIndex] = { date, time, note };
+      }
+
+      localStorage.setItem('homeRecords', JSON.stringify(records));
+      renderTable();
+      closeModal();
+    }
+
+    function deleteRecord(index) {
+      if (confirm('確定要刪除這筆記錄嗎？')) {
+        records.splice(index, 1);
+        localStorage.setItem('homeRecords', JSON.stringify(records));
+        renderTable();
+      }
+    }
+
+    // 初始化渲染
+    renderTable();
+  </script>
+</body>
+</html>
